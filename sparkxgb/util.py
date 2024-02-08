@@ -34,7 +34,12 @@ class XGBoostReader(JavaMLReader):
 
     @classmethod
     def _java_loader_class(cls, clazz):
-        if hasattr(clazz, '_java_class_name') and clazz._java_class_name is not None:
+        if hasattr(clazz, "_java_class_name") and clazz._java_class_name is not None:
             return clazz._java_class_name
         else:
             return JavaMLReader._java_loader_class(clazz)
+
+
+def snake_to_lower_camel(snake_case):
+    parts = snake_case.split("_")
+    return parts[0] + "".join(part.capitalize() for part in parts[1:])
