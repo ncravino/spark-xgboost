@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Dict
 from pyspark import keyword_only
-
 from sparkxgb.common import XGboostEstimator, XGboostModel
 
 
@@ -24,131 +24,21 @@ class XGBoostClassifier(XGboostEstimator):
     """
 
     @keyword_only
-    def __init__(self,
-                 alpha=0.0,
-                 baseMarginCol=None,
-                 baseScore=0.5,
-                 cacheTrainingSet=False,
-                 checkpointInterval=-1,
-                 checkpointPath="",
-                 colsampleBylevel=1.0,
-                 colsampleBytree=1.0,
-                 contribPredictionCol=None,
-                 ## EXCLUDED: customEval=None,
-                 ## EXCLUDED: customObj=None,
-                 eta=0.3,
-                 evalMetric=None,
-                 featuresCol="features",
-                 gamma=0.0,
-                 growPolicy="depthwise",
-                 interactionConstraints=None,
-                 labelCol="label",
-                 lambda_=1.0,  # Rename of 'lambda' param, as this is a reserved keyword in python.
-                 lambdaBias=0.0,
-                 leafPredictionCol=None,
-                 maxBins=16,
-                 maxDeltaStep=0.0,
-                 maxDepth=6,
-                 maxLeaves=None,
-                 maximizeEvaluationMetrics=None,
-                 minChildWeight=1.0,
-                 missing=float('nan'),
-                 monotoneConstraints=None,
-                 normalizeType="tree",
-                 nthread=1,
-                 numClass=None,
-                 numEarlyStoppingRounds=0,
-                 numRound=1,
-                 numWorkers=1,
-                 objective="reg:squarederror",
-                 objectiveType=None,
-                 predictionCol="prediction",
-                 probabilityCol="probability",
-                 rateDrop=0.0,
-                 rawPredictionCol="rawPrediction",
-                 sampleType="uniform",
-                 scalePosWeight=1.0,
-                 seed=0,
-                 silent=0,
-                 sketchEps=0.03,
-                 skipDrop=0.0,
-                 subsample=1.0,
-                 thresholds=None,
-                 timeoutRequestWorkers=1800000,
-                 ## EXCLUDED: trackerConf=None,
-                 trainTestRatio=1.0,
-                 treeLimit=0,
-                 treeMethod="auto",
-                 useExternalMemory=False,
-                 verbosity=1,
-                 weightCol=None):
-        super(XGBoostClassifier, self).__init__(classname="ml.dmlc.xgboost4j.scala.spark.XGBoostClassifier")
-        kwargs = self._input_kwargs
-        if "lambda_" in kwargs:
-            kwargs["lambda"] = kwargs.pop("lambda_")
-        self.setParams(**kwargs)
+    def __init__(self, xgboost_params):
+        super(XGBoostClassifier, self).__init__(
+            classname="ml.dmlc.xgboost4j.scala.spark.XGBoostClassifier"
+        )
+        xgboost_params_clean = {
+            k: v for k, v in xgboost_params.items() if v is not None
+        }
+
+        self.setParams(xgboost_params=xgboost_params_clean)
 
     @keyword_only
-    def setParams(self,
-                  alpha=0.0,
-                  baseMarginCol=None,
-                  baseScore=0.5,
-                  cacheTrainingSet=False,
-                  checkpointInterval=-1,
-                  checkpointPath="",
-                  colsampleBylevel=1.0,
-                  colsampleBytree=1.0,
-                  contribPredictionCol=None,
-                  ## EXCLUDED: customEval=None,
-                  ## EXCLUDED: customObj=None,
-                  eta=0.3,
-                  evalMetric=None,
-                  featuresCol="features",
-                  gamma=0.0,
-                  growPolicy="depthwise",
-                  interactionConstraints=None,
-                  labelCol="label",
-                  lambda_=1.0,  # Rename of 'lambda' param, as this is a reserved keyword in python.
-                  lambdaBias=0.0,
-                  leafPredictionCol=None,
-                  maxBins=16,
-                  maxDeltaStep=0.0,
-                  maxDepth=6,
-                  maxLeaves=None,
-                  maximizeEvaluationMetrics=None,
-                  minChildWeight=1.0,
-                  missing=float('nan'),
-                  monotoneConstraints=None,
-                  normalizeType="tree",
-                  nthread=1,
-                  numClass=None,
-                  numEarlyStoppingRounds=0,
-                  numRound=1,
-                  numWorkers=1,
-                  objective="reg:squarederror",
-                  objectiveType=None,
-                  predictionCol="prediction",
-                  probabilityCol="probability",
-                  rateDrop=0.0,
-                  rawPredictionCol="rawPrediction",
-                  sampleType="uniform",
-                  scalePosWeight=1.0,
-                  seed=0,
-                  silent=0,
-                  sketchEps=0.03,
-                  skipDrop=0.0,
-                  subsample=1.0,
-                  thresholds=None,
-                  timeoutRequestWorkers=1800000,
-                  ## EXCLUDED: trackerConf=None,
-                  trainTestRatio=1.0,
-                  treeLimit=0,
-                  treeMethod="auto",
-                  useExternalMemory=False,
-                  verbosity=1,
-                  weightCol=None):
+    def setParams(self, xgboost_params):
         kwargs = self._input_kwargs
-        return self._set(**kwargs)
+
+        return self._set(**xgboost_params)
 
     def _create_model(self, java_model):
         return XGBoostClassificationModel(java_model=java_model)
@@ -159,8 +49,28 @@ class XGBoostClassificationModel(XGboostModel):
     A PySpark wrapper of ml.dmlc.xgboost4j.scala.spark.XGBoostClassificationModel
     """
 
-    def __init__(self, classname="ml.dmlc.xgboost4j.scala.spark.XGBoostClassificationModel", java_model=None):
-        super(XGBoostClassificationModel, self).__init__(classname=classname, java_model=java_model)
+    def __init__(
+        self,
+        classname="ml.dmlc.xgboost4j.scala.spark.XGBoostClassificationModel",
+        java_model=None,
+    ):
+        super(XGBoostClassificationModel, self).__init__(
+            classname=classname, java_model=java_model
+        )
+
+    def getScore(self, feature: str = None, scoreType="weight") -> Dict[str, float]:
+
+        jvm_map = self.nativeBooster.getScore(feature, scoreType)
+
+        jvm_keys = jvm_map.keys().toList()
+
+        keys = [jvm_keys.apply(i) for i in range(0, jvm_keys.length())]
+
+        return {k: jvm_map.apply(k) for k in keys}
+
+    def getNumFeature(self) -> int:
+
+        return self.nativeBooster.getNumFeature()
 
     @property
     def nativeBooster(self):
@@ -177,133 +87,18 @@ class XGBoostRegressor(XGboostEstimator):
     """
 
     @keyword_only
-    def __init__(self,
-                 alpha=0.0,
-                 baseMarginCol=None,
-                 baseScore=0.5,
-                 cacheTrainingSet=False,
-                 checkpointInterval=-1,
-                 checkpointPath="",
-                 colsampleBylevel=1.0,
-                 colsampleBytree=1.0,
-                 contribPredictionCol=None,
-                 ## EXCLUDED: customEval=None,
-                 ## EXCLUDED: customObj=None,
-                 eta=0.3,
-                 evalMetric=None,
-                 featuresCol="features",
-                 gamma=0.0,
-                 groupCol=None,
-                 growPolicy="depthwise",
-                 interactionConstraints=None,
-                 labelCol="label",
-                 lambda_=1.0,  # Rename of 'lambda' param, as this is a reserved keyword in python.
-                 lambdaBias=0.0,
-                 leafPredictionCol=None,
-                 maxBins=16,
-                 maxDeltaStep=0.0,
-                 maxDepth=6,
-                 maxLeaves=None,
-                 maximizeEvaluationMetrics=None,
-                 minChildWeight=1.0,
-                 missing=float('nan'),
-                 monotoneConstraints=None,
-                 normalizeType="tree",
-                 nthread=1,
-                 numClass=None,
-                 numEarlyStoppingRounds=0,
-                 numRound=1,
-                 numWorkers=1,
-                 objective="reg:squarederror",
-                 objectiveType=None,
-                 predictionCol="prediction",
-                 probabilityCol="probability",
-                 rateDrop=0.0,
-                 rawPredictionCol="rawPrediction",
-                 sampleType="uniform",
-                 scalePosWeight=1.0,
-                 seed=0,
-                 silent=0,
-                 sketchEps=0.03,
-                 skipDrop=0.0,
-                 subsample=1.0,
-                 thresholds=None,
-                 timeoutRequestWorkers=1800000,
-                 ## EXCLUDED: trackerConf=None,
-                 trainTestRatio=1.0,
-                 treeLimit=0,
-                 treeMethod="auto",
-                 useExternalMemory=False,
-                 verbosity=1,
-                 weightCol=None):
-        super(XGBoostRegressor, self).__init__(classname="ml.dmlc.xgboost4j.scala.spark.XGBoostRegressor")
-        kwargs = self._input_kwargs
-        if "lambda_" in kwargs:
-            kwargs["lambda"] = kwargs.pop("lambda_")
-        self.setParams(**kwargs)
+    def __init__(self, xgboost_params):
+        super(XGBoostRegressor, self).__init__(
+            classname="ml.dmlc.xgboost4j.scala.spark.XGBoostRegressor"
+        )
+        xgboost_params_clean = {
+            k: v for k, v in xgboost_params.items() if v is not None
+        }
+        self.setParams(xgboost_params=xgboost_params_clean)
 
     @keyword_only
-    def setParams(self,
-                  alpha=0.0,
-                  baseMarginCol=None,
-                  baseScore=0.5,
-                  cacheTrainingSet=False,
-                  checkpointInterval=-1,
-                  checkpointPath="",
-                  colsampleBylevel=1.0,
-                  colsampleBytree=1.0,
-                  contribPredictionCol=None,
-                  ## EXCLUDED: customEval=None,
-                  ## EXCLUDED: customObj=None,
-                  eta=0.3,
-                  evalMetric=None,
-                  featuresCol="features",
-                  gamma=0.0,
-                  groupCol=None,
-                  growPolicy="depthwise",
-                  interactionConstraints=None,
-                  labelCol="label",
-                  lambda_=1.0,  # Rename of 'lambda' param, as this is a reserved keyword in python.
-                  lambdaBias=0.0,
-                  leafPredictionCol=None,
-                  maxBins=16,
-                  maxDeltaStep=0.0,
-                  maxDepth=6,
-                  maxLeaves=None,
-                  maximizeEvaluationMetrics=None,
-                  minChildWeight=1.0,
-                  missing=float('nan'),
-                  monotoneConstraints=None,
-                  normalizeType="tree",
-                  nthread=1,
-                  numClass=None,
-                  numEarlyStoppingRounds=0,
-                  numRound=1,
-                  numWorkers=1,
-                  objective="reg:squarederror",
-                  objectiveType=None,
-                  predictionCol="prediction",
-                  probabilityCol="probability",
-                  rateDrop=0.0,
-                  rawPredictionCol="rawPrediction",
-                  sampleType="uniform",
-                  scalePosWeight=1.0,
-                  seed=0,
-                  silent=0,
-                  sketchEps=0.03,
-                  skipDrop=0.0,
-                  subsample=1.0,
-                  thresholds=None,
-                  timeoutRequestWorkers=1800000,
-                  ## EXCLUDED: trackerConf=None,
-                  trainTestRatio=1.0,
-                  treeLimit=0,
-                  treeMethod="auto",
-                  useExternalMemory=False,
-                  verbosity=1,
-                  weightCol=None):
-        kwargs = self._input_kwargs
-        return self._set(**kwargs)
+    def setParams(self, xgboost_params):
+        return self._set(**xgboost_params)
 
     def _create_model(self, java_model):
         return XGBoostRegressionModel(java_model=java_model)
@@ -314,8 +109,14 @@ class XGBoostRegressionModel(XGboostModel):
     A PySpark wrapper of ml.dmlc.xgboost4j.scala.spark.XGBoostRegressionModel
     """
 
-    def __init__(self, classname="ml.dmlc.xgboost4j.scala.spark.XGBoostRegressionModel", java_model=None):
-        super(XGBoostRegressionModel, self).__init__(classname=classname, java_model=java_model)
+    def __init__(
+        self,
+        classname="ml.dmlc.xgboost4j.scala.spark.XGBoostRegressionModel",
+        java_model=None,
+    ):
+        super(XGBoostRegressionModel, self).__init__(
+            classname=classname, java_model=java_model
+        )
 
     @property
     def nativeBooster(self):

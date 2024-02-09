@@ -29,8 +29,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="DMLC",
-    python_requires=">=3.8",
-    install_requires=["numpy", "pyspark>=3.3.0"],
+    python_requires=">=3.9",
+    install_requires=["numpy", "pyspark>=3.5.0"],
     classifiers=[
         # Project Maturity
         "Development Status :: 5 - Production/Stable",

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.11.2]
+        python-version: [3.9, 3.11.2]
         pyspark-version: [3.3.0, 3.4.0, 3.5.0]
     steps:
     - uses: actions/checkout@v2
